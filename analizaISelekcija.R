@@ -1,10 +1,8 @@
 #ucitavanje dataset-a
-#bla
 data=read.csv("airline_passenger_satisfaction.csv",stringsAsFactors = F)
 
 #ucitavanje potrebnih paketa
 library(ggplot2)
-library(caret)
 
 #ispitivanje strukure dataset-a 
 #(pomocu summary() ne mozemo dobiti osnovne informacije za character varijable)
@@ -29,8 +27,7 @@ length(unique(data$Age))
 table(data$Age)
 
 #Varijabla Customer.Type sadrzi 2 vrednosti(First-time i Returning),dakle pretvaramo varijablu u faktorsku
-#pri cemu znacajno vise putnika pripada tipu Returning
-#Returning su putnici koji su vec putovali aviokompanijom
+#pri cemu znacajno vise putnika pripada tipu Returning (putnici koji su vec putovali aviokompanijom)
 length(unique(data$Customer.Type)) 
 table(data$Customer.Type)
 data$Customer.Type<-as.factor(data$Customer.Type)
@@ -54,9 +51,9 @@ length(unique(data$Departure.Delay))
 #numericka varijabla sa 473 razlicite vrednosti (predstavlja kasnjenje prilikom sletanja na aerodrom izrazeno u minutima)
 length(unique(data$Arrival.Delay))
 
-#naredne varijable (od Departure and Arrival convience do Baggage Handling) su predstavljene brojevima 0-5,
+#Naredne varijable (od Departure and Arrival convience do Baggage Handling) su predstavljene brojevima 0-5
 #0 vrednosti su "not applicable" tj NA, a 1-5 su ocene od najnize do najvise
-#kod svake od narednih varijabli cemo vrednosti 0 prvo proglasiti kao NA vrednosti, pa potom zameniti sa medijanom
+#Kod svake od narednih varijabli cemo vrednosti 0 prvo proglasiti kao NA vrednosti, pa potom zameniti sa medijanom
 #Ne moramo raditi Shapiro-test za utvrdjivanje raspodele za svaku varijablu posebno, jer je srednja vrednost kod varijabli sa normalnom raspodelom zapravo jednaka medijani
 #Ukoliko bismo radili Shapiro-test, broj opservacija u ovom dataset-u visestruko prevazilazi maksimalnih 5000 koje taj test dozvoljava, tako da bismo radili samo na uzorku od 5000 opservacija
 
@@ -148,10 +145,14 @@ apply(data,MARGIN = 2,function(x) sum(x==" ",na.rm=T))
 #Vidimo da varijabla Arrival.Delay sadrzi 393 NA vrednosti tako da cemo te vrednosti zameniti medijanom
 data$Arrival.Delay[is.na(data$Arrival.Delay)]<-median(data$Arrival.Delay, na.rm=T)
 
-#postoji znacajna razlika u godinama 
+#Selektujemo atribute koji imaju znacajan uticaj na predvidjanje zadovoljstva putnika
+#To su atributi kod kojih postoji jasna razlika odnosa zadovoljstva i nezadovoljstva putnika u odnosu na odredjene vrednosti tog atributa(prikazane na X osi)
+#Varijable koje ne zadovoljavaju taj uslov izbacujemo iz dataset-a
+
 ggplot(data,aes(x=Age,fill=Satisfaction))+geom_density(alpha=0.5)
-#ne postoji znacajna razlika u polu
+
 ggplot(data,aes(x=Gender,fill=Satisfaction))+geom_bar(position = "fill")
+data$Gender<-NULL
 
 ggplot(data,aes(x=Customer.Type,fill=Satisfaction))+geom_bar(position = "fill")
 
@@ -160,12 +161,15 @@ ggplot(data,aes(x=Type.of.Travel,fill=Satisfaction))+geom_bar(position = "fill")
 ggplot(data,aes(x=Class,fill=Satisfaction))+geom_bar(position = "fill")
 
 ggplot(data,aes(x=Flight.Distance,fill=Satisfaction))+geom_density(alpha=0.5)
-#ne postoji znacajna razlika
+
 ggplot(data,aes(x=Departure.Delay,fill=Satisfaction))+geom_density(alpha=0.5)
-#ne postoji znacajna razlika
+data$Departure.Delay<-NULL
+
 ggplot(data,aes(x=Arrival.Delay,fill=Satisfaction))+geom_density(alpha=0.5)
-#?
+data$Arrival.Delay<-NULL
+
 ggplot(data,aes(x=Departure.and.Arrival.Time.Convenience,fill=Satisfaction))+geom_bar(position = "fill")
+data$Departure.and.Arrival.Time.Convenience<-NULL
 
 ggplot(data,aes(x=Ease.of.Online.Booking,fill=Satisfaction))+geom_bar(position = "fill")
 
