@@ -1,4 +1,5 @@
 #ucitavanje dataset-a
+#bla
 data=read.csv("airline_passenger_satisfaction.csv",stringsAsFactors = F)
 
 #ucitavanje potrebnih paketa
