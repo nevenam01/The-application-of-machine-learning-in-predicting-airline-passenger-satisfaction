@@ -1,6 +1,6 @@
 #ucitavanje dataset-a
 data=read.csv("airline_passenger_satisfaction.csv",stringsAsFactors = F)
-
+table(data$Satisfaction)
 #ucitavanje potrebnih paketa
 library(ggplot2)
 library(dplyr)
