@@ -36,7 +36,7 @@ preProcValues <- preProcess(train.data[, numericCols], method = c("center", "sca
 
 train.data[, numericCols] <- predict(preProcValues, train.data[, numericCols])
 test.data[, numericCols] <- predict(preProcValues, test.data[, numericCols])
-summary(test.data)
+summary(train.data)
 summary(test.data)
 
 # PRVI MODEL: default logistic regression model (nebalansiran i bez metode regularizacije)###################################################
@@ -117,7 +117,7 @@ eval_comparison
 
 #Uporedjivanjem evalucionih metrika, odlucujemo da koristimo model koji koristi lasso metodu regularizacije i up metodu balansiranja
 # DRUGI MODEL: model logisticke regresije primenom lasso regularizacije i up balansiranja #################################
-lr2 <- models[["elasticnet_up"]]
+lr2 <- models[["lasso_up"]]
 lr2
 best_lambda <- lr2$bestTune$lambda
 best_lambda
@@ -130,14 +130,14 @@ lr2.pred <- as.factor(lr2.pred)
 
 cm2 <- table(actual = test.data$Satisfaction, predicted = lr2.pred)
 cm2
-                            #predicted
+#predicted
 #actual                    Neutral.or.Dissatisfied Satisfied
-#Neutral.or.Dissatisfied                 2689       231
-#Satisfied                               205       2070
+#Neutral.or.Dissatisfied                 2688       232
+#Satisfied                               204       2071
 eval2 <- compute_eval_metrics(cm2)
 eval2
 # accuracy precision    recall        F1 
-#0.9160731 0.8996089 0.9098901 0.904720
+#0.9160731 0.8992618 0.9103297 0.9047619 
 
 #Napomena: evalucione metrike za ovaj model smo mogli da dobijemo i direktno iz eval_comparison
 eval2 <- eval_comparison[2, ]
@@ -155,7 +155,7 @@ youden.coords <- coords(lr3.roc,
                         transpose=FALSE)
 
 youden.threshold <- youden.coords[1,1]
-youden.threshold #0.5593685
+youden.threshold # 0.5684613
 
 
 lr3.pred <- ifelse(test=lr2.prob.satisfied > youden.threshold, yes="Satisfised",no="Neutral.or.Dissatisfied")
@@ -164,43 +164,49 @@ lr3.pred <- as.factor(lr3.pred)
 cm3 <- table(actual = test.data$Satisfaction, 
              predicted = lr3.pred)
 cm3
-                                    #predicted
-#actual                    Neutral.or.Dissatisfied Satisfised
-#Neutral.or.Dissatisfied                    2739        181
-#Satisfied                                   236       2039
+#predicted
+#actual                    Neutral.or.Dissatisfied   Satisfised
+#Neutral.or.Dissatisfied              2744            176
+#Satisfied                            240             2035
 
 eval3 <-  compute_eval_metrics(cm3)
 eval3
 # accuracy  precision    recall        F1
 # 0.9197305 0.9184685 0.8962637 0.9072303 
 
-#TRECI MODEL: model sa promenom praga (youden metoda) #############################
+#CETVRTI MODEL: model sa promenom praga (closest.topleft metoda) #############################
 ctl.coords <- coords(lr3.roc,
-                        best.method = "closest.topleft",
-                        ret=c("threshold","sensitivity"),
-                        x='best',
-                        transpose=FALSE)
+                     best.method = "closest.topleft",
+                     ret=c("threshold","sensitivity"),
+                     x='best',
+                     transpose=FALSE)
 
 ctl.threshold <- ctl.coords[1,1]
-ctl.threshold #0.5100865
+ctl.threshold #0.5140023
 
 
-lr4.pred <- ifelse(test=lr2.prob.satisfied > youden.threshold, yes="Satisfised",no="Neutral.or.Dissatisfied")
+lr4.pred <- ifelse(test=lr2.prob.satisfied > ctl.threshold, yes="Satisfised",no="Neutral.or.Dissatisfied")
 lr4.pred <- as.factor(lr4.pred)
 
 cm4 <- table(actual = test.data$Satisfaction, 
              predicted = lr4.pred)
 cm4
+#predicted
+#actual                    Neutral.or.Dissatisfied Satisfised
+#Neutral.or.Dissatisfied                    2703        217
+#Satisfied                                   211       2064
 
 eval4 <-  compute_eval_metrics(cm4)
 eval4
-#iste evalucione metrike kao za youden
+# accuracy precision    recall      F1 
+#0.9176131 0.9048663 0.9072527 0.9060579 
 
 #poredjenje evalucionih metrika medju modelima
-data.frame(rbind(eval1,eval2,eval3),row.names = paste0("model_",1:3))
+data.frame(rbind(eval1,eval2,eval3,eval4),row.names = paste0("model_",1:4))
 #                            accuracy  precision    recall    F1
 #model_1(default model)     0.9179981 0.9151325 0.8958242 0.9053754
-#model_2(lasso, up)        0.9160731 0.8992618 0.9103297 0.9047619
-#model_3(youden)            0.9197305 0.9184685 0.8962637 0.9072303
+#model_2(lasso, up)         0.9160731 0.8992618 0.9103297 0.9047619
+#model_3(youden)            0.9199230 0.9203980 0.8945055 0.9072671
+#model_4(clossest.topleft)  0.9176131 0.9048663 0.9072527 0.9060579
 
-#Na osnovu evalucionih metrika lasso up model sa primenom Youden thresholda je najbolji
+#Na osnovu evalucionih metrika lasso up model sa primenom Youden thresholda je najbolji je najbolji
