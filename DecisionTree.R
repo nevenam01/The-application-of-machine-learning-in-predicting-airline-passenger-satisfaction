@@ -7,11 +7,7 @@ data <- readRDS(file = "AnalizaISelekcija.RDS")
 
 str(data)
 
-table(data$Satisfaction)
-#Neutral or Dissatisfied    Satisfied  
-#73452                       56428
-
-#Da bi Neutral or Dissatisfied predvorilo u Neutral.or.Dissatisfied
+#Da bi Neutral or Dissatisfied pretvorilo u Neutral.or.Dissatisfied
 levels(data$Satisfaction) <- make.names(levels(data$Satisfaction))
 
 #Trening i Test
@@ -27,7 +23,6 @@ tree1 <- rpart(Satisfaction ~ ., data = train.data)
 rpart.plot(tree1)
 
 tree1.pred <- predict(tree1, newdata = test.data, type = "class")
-
 
 cm1 <- table(true=test.data$Satisfaction,
              predicted=tree1.pred)
@@ -136,6 +131,7 @@ summary(resampling, metric = "ROC")
 #Stablo 2 - nebalansirano stablo uz koriscenje cp parametra
 original$finalModel
 
+rpart.plot(original$finalModel)
 tree2.pred <- predict(object = original$finalModel, newdata = test.data, type = "class")
 
 #Kreiranje matrice konfuzije
@@ -157,10 +153,18 @@ tree2.eval
 data.frame(rbind(tree1.eval, tree2.eval),
            row.names = c(paste("Stablo_", 1:2, sep = "")))
 
-#accuracy precision    recall        F1     Kappa
+#         accuracy precision    recall        F1    
 #Stablo_1 0.8688739 0.8341674 0.8714222 0.8523880
 #Stablo_2 0.9445236 0.9618994 0.9082853 0.9343239
 
 #Vidimo da stablo 2 ima bolje evalucione metrike
 
+# Izracunavanje znacajnosti atributa
+importance <- varImp(original$finalModel, scale = TRUE)
+str(importance)
+# Nalazenje max vrednosti znacajnosti i prevodjenje na opseg 0-100
+max_importance <- max(importance$Overall, na.rm = TRUE)
+importance$Normalized <- (importance$Overall / max_importance) * 100
+
+print(importance)
 
